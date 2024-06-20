@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Button, Typography } from "antd";
 import "antd/dist/reset.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./App.css"; // Make sure to import your CSS file
 import {
   SearchOutlined,
@@ -187,7 +187,11 @@ const Match = () => {
     opt4: "",
     correct: "",
   });
+  const [result, setResult] = useState([]);
   const fetchQuestion = async () => {
+    if (gameData.questions == 0) {
+      navigateToEndMatch();
+    }
     setQuestion(await fetch_question());
   };
 
@@ -199,12 +203,17 @@ const Match = () => {
   });
 
   useEffect(() => {
+    if (gameData.questions == 0) {
+      navigateToEndMatch();
+    }
     fetchQuestion();
   }, []);
   const navigate = useNavigate();
 
   const navigateToEndMatch = () => {
-    navigate("/endmatch");
+    let tmp = [false, true, true];
+    console.log("sending this one: ", [...result, ...[false, true, true]]);
+    navigate("/endmatch", { state: { result: [...result, ...tmp] } });
   };
   const handleNextQuestion1 = async () => {
     // checking the question
@@ -213,19 +222,23 @@ const Match = () => {
       await sleep(100);
       document.querySelector(".main-container").style.backgroundColor =
         "transparent";
+      console.log("adding");
+      let tmp_result = result;
+      tmp_result.push(true);
+      setResult(tmp_result);
     } else {
       document.querySelector(".main-container").style.backgroundColor = "red";
       // setMainColor(true);
       await sleep(100);
       document.querySelector(".main-container").style.backgroundColor =
         "transparent";
+      console.log("adding");
+      let tmp_result = result;
+      tmp_result.push(false);
+      setResult(tmp_result);
     }
     gameData.questions -= 1;
-    if (gameData.questions == 0) {
-      navigateToEndMatch();
-    } else {
-      fetchQuestion();
-    }
+    fetchQuestion();
   };
   const handleNextQuestion2 = async () => {
     // checking the question
@@ -234,19 +247,23 @@ const Match = () => {
       await sleep(100);
       document.querySelector(".main-container").style.backgroundColor =
         "transparent";
+      console.log("adding");
+      let tmp_result = result;
+      tmp_result.push(true);
+      setResult(tmp_result);
     } else {
       document.querySelector(".main-container").style.backgroundColor = "red";
       // setMainColor(true);
       await sleep(100);
       document.querySelector(".main-container").style.backgroundColor =
         "transparent";
+      console.log("adding");
+      let tmp_result = result;
+      tmp_result.push(false);
+      setResult(tmp_result);
     }
     gameData.questions -= 1;
-    if (gameData.questions == 0) {
-      navigateToEndMatch();
-    } else {
-      fetchQuestion();
-    }
+    fetchQuestion();
   };
   const handleNextQuestion3 = async () => {
     // checking the question
@@ -255,19 +272,23 @@ const Match = () => {
       await sleep(100);
       document.querySelector(".main-container").style.backgroundColor =
         "transparent";
+      console.log("adding");
+      let tmp_result = result;
+      tmp_result.push(true);
+      setResult(tmp_result);
     } else {
       document.querySelector(".main-container").style.backgroundColor = "red";
       // setMainColor(true);
       await sleep(100);
       document.querySelector(".main-container").style.backgroundColor =
         "transparent";
+      console.log("adding");
+      let tmp_result = result;
+      tmp_result.push(false);
+      setResult(tmp_result);
     }
     gameData.questions -= 1;
-    if (gameData.questions == 0) {
-      navigateToEndMatch();
-    } else {
-      fetchQuestion();
-    }
+    fetchQuestion();
   };
   const handleNextQuestion4 = async () => {
     // checking the question
@@ -276,19 +297,23 @@ const Match = () => {
       await sleep(100);
       document.querySelector(".main-container").style.backgroundColor =
         "transparent";
+      console.log("adding");
+      let tmp_result = result;
+      tmp_result.push(true);
+      setResult(tmp_result);
     } else {
       document.querySelector(".main-container").style.backgroundColor = "red";
       // setMainColor(true);
       await sleep(100);
       document.querySelector(".main-container").style.backgroundColor =
         "transparent";
+      console.log("adding");
+      let tmp_result = result;
+      tmp_result.push(false);
+      setResult(tmp_result);
     }
     gameData.questions -= 1;
-    if (gameData.questions == 0) {
-      navigateToEndMatch();
-    } else {
-      fetchQuestion();
-    }
+    fetchQuestion();
   };
 
   return (
@@ -380,37 +405,48 @@ const Match = () => {
   );
 };
 
-const EndMatch = () => {
-  const [results, setResult] = useState({
-    user_res: [true, false, true],
-    opponent_res: [false, false, true],
-    status: "congrats, you won 🎉",
-  });
-  const [gameData, setGameData] = useState({
-    opponent: "some sort of address",
-    questions: "3",
-  });
-  useEffect(() => {
-    const getQ = async () => {
-      const fetchedData = await fetchResults();
-      setResult(fetchedData);
-    };
+const EndMatch = (state) => {
+  const location = useLocation();
+  const { result } = location.state || {}; // Destructure state or provide default empty object
 
-    getQ();
-  }, []);
+  function who_won(res) {
+    console.log(result);
+    const user1Score = res.slice(0, 3).filter((res) => res).length;
+    const user2Score = res.slice(3, 6).filter((res) => res).length;
+
+    if (user1Score > user2Score) {
+      return "Congrats, you won 🎉";
+    } else if (user2Score > user1Score) {
+      return "Better luck next time :(";
+    } else {
+      return "Draw !";
+    }
+  }
+  const [results, setResult] = useState({
+    user_res: result.slice(0, 3),
+    opponent_res: result.slice(3, 6),
+    status: who_won(result),
+  });
+  // useEffect(() => {
+  //   const getQ = async () => {
+  //     const fetchedData = await fetchResults();
+  //     console.log("this is the result :", result);
+
+  //     setResult(fetchedData);
+  //   };
+
+  //   getQ();
+  // }, []);
   const navigate = useNavigate();
 
   const navigateToHome = () => {
     navigate("/");
   };
-  const [inputTokens, setInputTokens] = useState("1");
-  const onChange = (newValue) => {
-    setInputTokens(newValue);
-  };
+
   const renderResult = (res) => {
-    if (res === true) {
+    if (res == true) {
       return <CheckOutlined style={{ color: "green" }} />;
-    } else if (res === false) {
+    } else if (res == false) {
       return <CloseOutlined style={{ color: "red" }} />;
     } else {
       return <span>N/A</span>;
