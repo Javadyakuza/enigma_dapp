@@ -234,6 +234,7 @@ async function fetch_question() {
   // If you need the question with the same structure (e.g., with a key like question_1, question_2)
   return question;
 }
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
