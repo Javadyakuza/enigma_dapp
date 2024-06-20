@@ -12,7 +12,14 @@ import {
   CloseOutlined,
 } from "@ant-design/icons";
 import { Col, InputNumber, Row, Slider, Space } from "antd";
-import { connect_wallet, deposit } from "./helpers";
+import {
+  connect_wallet,
+  deposit,
+  withdraw,
+  fetch_question,
+  getFormattedString,
+  sleep,
+} from "./helpers";
 import { Buffer } from "buffer";
 import process from "process";
 import { ConnectionNotOpenError } from "web3";
@@ -21,16 +28,6 @@ const { Title } = Typography;
 global.Buffer = Buffer;
 global.process = process;
 // Function to fetch data
-
-const fetchQuestion = async () => {
-  // Simulate a data fetch. Replace with actual data fetching logic.
-  const response = await new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ body: "this is some serious question" });
-    }, 1000);
-  });
-  return response;
-};
 
 const fetchGameData = async () => {
   // Simulate a data fetch. Replace with actual data fetching logic.
@@ -57,7 +54,10 @@ const fetchResults = async () => {
 const Home = () => {
   const [walletData, setWalletData] = useState({ address: "", balance: "" });
   const [inputTokens, setInputTokens] = useState("1");
+  const [findMatchDisability, setFindMatchDisability] = useState(true);
+
   const onChange = (newValue) => {
+    setFindMatchDisability(find_match_dis());
     setInputTokens(newValue);
   };
   const fetchWalletData = async () => {
@@ -67,6 +67,13 @@ const Home = () => {
   };
   const handleDeposit = async () => {
     await deposit(inputTokens);
+  };
+  const handleWithdraw = async () => {
+    await withdraw(inputTokens);
+  };
+
+  const find_match_dis = () => {
+    return walletData.balance >= inputTokens ? false : true;
   };
   useEffect(() => {
     const getData = async () => {
@@ -119,6 +126,7 @@ const Home = () => {
             iconPosition={"start"}
             type="primary"
             onClick={navigateToMatch}
+            disabled={findMatchDisability}
           >
             Find Match
           </Button>
@@ -159,6 +167,7 @@ const Home = () => {
               icon={<ArrowUpOutlined />}
               iconPosition={"start"}
               type="primary"
+              onClick={handleWithdraw}
             >
               Withdraw
             </Button>
@@ -171,34 +180,117 @@ const Home = () => {
 
 const Match = () => {
   const [question, setQuestion] = useState({
-    body: "this is the first question",
-    opt1: "yes",
-    opt2: "no",
-    opt3: "yes-no",
-    opt4: "no-yes",
+    body: "",
+    opt1: "",
+    opt2: "",
+    opt3: "",
+    opt4: "",
+    correct: "",
   });
-  const [gameData, setGameData] = useState({
-    opponent: "some sort of address",
-    questions: "3",
-  });
-  useEffect(() => {
-    const getQ = async () => {
-      const fetchedData = await fetchGameData();
-      setGameData(fetchedData);
-    };
-
-    getQ();
-  }, []);
-
-  const [inputTokens, setInputTokens] = useState("1");
-  const onChange = (newValue) => {
-    setInputTokens(newValue);
+  const fetchQuestion = async () => {
+    setQuestion(await fetch_question());
   };
+
+  const [gameData, setGameData] = useState({
+    opponent: getFormattedString(
+      "archtestop18t6uyv8797813bujb645qef2f234f234jsnbfv"
+    ),
+    questions: 3,
+  });
+
+  useEffect(() => {
+    fetchQuestion();
+  }, []);
   const navigate = useNavigate();
 
   const navigateToEndMatch = () => {
     navigate("/endmatch");
   };
+  const handleNextQuestion1 = async () => {
+    // checking the question
+    if (question.opt1 == question.correct) {
+      document.querySelector(".main-container").style.backgroundColor = "green";
+      await sleep(100);
+      document.querySelector(".main-container").style.backgroundColor =
+        "transparent";
+    } else {
+      document.querySelector(".main-container").style.backgroundColor = "red";
+      // setMainColor(true);
+      await sleep(100);
+      document.querySelector(".main-container").style.backgroundColor =
+        "transparent";
+    }
+    gameData.questions -= 1;
+    if (gameData.questions == 0) {
+      navigateToEndMatch();
+    } else {
+      fetchQuestion();
+    }
+  };
+  const handleNextQuestion2 = async () => {
+    // checking the question
+    if (question.opt2 == question.correct) {
+      document.querySelector(".main-container").style.backgroundColor = "green";
+      await sleep(100);
+      document.querySelector(".main-container").style.backgroundColor =
+        "transparent";
+    } else {
+      document.querySelector(".main-container").style.backgroundColor = "red";
+      // setMainColor(true);
+      await sleep(100);
+      document.querySelector(".main-container").style.backgroundColor =
+        "transparent";
+    }
+    gameData.questions -= 1;
+    if (gameData.questions == 0) {
+      navigateToEndMatch();
+    } else {
+      fetchQuestion();
+    }
+  };
+  const handleNextQuestion3 = async () => {
+    // checking the question
+    if (question.opt3 == question.correct) {
+      document.querySelector(".main-container").style.backgroundColor = "green";
+      await sleep(100);
+      document.querySelector(".main-container").style.backgroundColor =
+        "transparent";
+    } else {
+      document.querySelector(".main-container").style.backgroundColor = "red";
+      // setMainColor(true);
+      await sleep(100);
+      document.querySelector(".main-container").style.backgroundColor =
+        "transparent";
+    }
+    gameData.questions -= 1;
+    if (gameData.questions == 0) {
+      navigateToEndMatch();
+    } else {
+      fetchQuestion();
+    }
+  };
+  const handleNextQuestion4 = async () => {
+    // checking the question
+    if (question.opt4 == question.correct) {
+      document.querySelector(".main-container").style.backgroundColor = "green";
+      await sleep(100);
+      document.querySelector(".main-container").style.backgroundColor =
+        "transparent";
+    } else {
+      document.querySelector(".main-container").style.backgroundColor = "red";
+      // setMainColor(true);
+      await sleep(100);
+      document.querySelector(".main-container").style.backgroundColor =
+        "transparent";
+    }
+    gameData.questions -= 1;
+    if (gameData.questions == 0) {
+      navigateToEndMatch();
+    } else {
+      fetchQuestion();
+    }
+  };
+
   return (
     <div className="main-container">
       <div className="info-container">
@@ -212,7 +304,7 @@ const Match = () => {
         </div>
         <div className="info-item">
           <Typography level={5}>Questions left: </Typography>
-          <span style={{ color: "#a312aa", margin: "10px" }}>
+          <span style={{ color: "#a312aa", margin: "0 0 0 5px" }}>
             {gameData.questions}
           </span>
         </div>
@@ -232,6 +324,7 @@ const Match = () => {
               textAlign: "center",
             }}
             type="primary"
+            onClick={handleNextQuestion1}
           >
             {question.opt1}
           </Button>
@@ -246,7 +339,7 @@ const Match = () => {
               justifyContent: "center",
             }}
             type="primary"
-            onClick={navigateToEndMatch}
+            onClick={handleNextQuestion2}
           >
             {question.opt2}
           </Button>
@@ -263,6 +356,7 @@ const Match = () => {
             }}
             size="large"
             type="primary"
+            onClick={handleNextQuestion3}
           >
             {question.opt3}
           </Button>
@@ -276,6 +370,7 @@ const Match = () => {
               textAlign: "center",
             }}
             type="primary"
+            onClick={handleNextQuestion4}
           >
             {question.opt4}
           </Button>
@@ -322,12 +417,12 @@ const EndMatch = () => {
     }
   };
   return (
-    <div classNameName="main-container">
+    <div class="main-container">
       <div style={{ margin: "15% 0 35% 0" }}>
         {" "}
         <Typography.Title level={4}>Results</Typography.Title>
-        <div classNameName="table-container">
-          <table classNameName="results-table">
+        <div class="table-container">
+          <table class="results-table">
             <thead>
               <tr>
                 <th></th>

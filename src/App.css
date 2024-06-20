@@ -34,7 +34,8 @@ html, body {
   color: rgb(127, 25, 127);
   font-weight: bold;
   display: flex;
-  margin: 5%;
+  margin: 5% 0% 0 10%;
+  position: relative;
 }
 .top-left {
   position: absolute;
