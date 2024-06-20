@@ -12,18 +12,15 @@ import {
   CloseOutlined,
 } from "@ant-design/icons";
 import { Col, InputNumber, Row, Slider, Space } from "antd";
-const { Title } = Typography;
+import { connect_wallet, deposit } from "./helpers";
+import { Buffer } from "buffer";
+import process from "process";
+import { ConnectionNotOpenError } from "web3";
 
+const { Title } = Typography;
+global.Buffer = Buffer;
+global.process = process;
 // Function to fetch data
-const fetchData = async () => {
-  // Simulate a data fetch. Replace with actual data fetching logic.
-  const response = await new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ address: "1234 Main St, Springfield, USA", balance: "1000" });
-    }, 1000);
-  });
-  return response;
-};
 
 const fetchQuestion = async () => {
   // Simulate a data fetch. Replace with actual data fetching logic.
@@ -58,45 +55,64 @@ const fetchResults = async () => {
   return response;
 };
 const Home = () => {
-  const [data, setData] = useState({ address: "", balance: "" });
-  const navigate = useNavigate();
+  const [walletData, setWalletData] = useState({ address: "", balance: "" });
+  const [inputTokens, setInputTokens] = useState("1");
+  const onChange = (newValue) => {
+    setInputTokens(newValue);
+  };
+  const fetchWalletData = async () => {
+    let wd = await connect_wallet();
+    setWalletData(wd);
+    return wd;
+  };
+  const handleDeposit = async () => {
+    await deposit(inputTokens);
+  };
   useEffect(() => {
     const getData = async () => {
-      const fetchedData = await fetchData();
-      fetchedData.address = <Button type="primary">Connect Wallet</Button>;
-      setData(fetchedData);
+      const fetchedData = await fetchWalletData();
+      fetchedData.address = (
+        <Button
+          type="primary"
+          disabled={fetchedData.address == "" ? false : true}
+          onClick={connect_wallet}
+        >
+          {fetchedData.address}
+        </Button>
+      );
+      setWalletData(fetchedData);
     };
 
     getData();
   }, []);
-  const [inputValue, setInputValue] = useState("1 tokens");
-  const onChange = (newValue) => {
-    setInputValue(newValue);
-  };
+
+  const navigate = useNavigate();
   const navigateToMatch = () => {
     navigate("/match");
   };
   return (
-    <div class="main-container">
-      <div class="main-inside-container">
-        <div class="top-left">
+    <div className="main-container">
+      <div className="main-inside-container">
+        <div className="top-left">
           <Typography.Title style={{ color: "rgb(127, 25, 127)" }} level={5}>
-            Address: <span style={{ color: "#d78c09" }}>{data.address}</span>
+            Address:{" "}
+            <span style={{ color: "#d78c09" }}>{walletData.address}</span>
           </Typography.Title>
           <Typography.Title
             style={{ color: "rgb(127, 25, 127)", textAlign: "left" }}
             level={5}
           >
-            Balance: <span style={{ color: "#d78c09" }}>{data.balance}</span>
+            Balance:{" "}
+            <span style={{ color: "#d78c09" }}>{walletData.balance}</span>
           </Typography.Title>
         </div>
-        <div class="center">
+        <div className="center">
           <Title level={2} style={{ color: "rgb(255, 0, 255)" }}>
             {" "}
             Enigma Duel
           </Title>
         </div>
-        <div class="bottom">
+        <div className="bottom">
           <Button
             style={{ backgroundColor: "rgb(200, 78, 158)" }}
             icon={<SearchOutlined />}
@@ -109,30 +125,31 @@ const Home = () => {
           <Row>
             <Col span={12}>
               <Slider
-                min={1}
-                max={10}
+                min={0}
+                max={20}
                 onChange={onChange}
-                value={typeof inputValue === "number" ? inputValue : 0}
+                value={typeof inputTokens === "number" ? inputTokens : 0}
               />
             </Col>
             <Col span={4}>
               <InputNumber
-                min={1}
-                max={10}
+                min={0}
+                max={20}
                 style={{
                   margin: "0 16px",
                 }}
-                value={inputValue}
+                value={inputTokens}
                 onChange={onChange}
               />
             </Col>
           </Row>
-          <div class="bottom-buttons">
+          <div className="bottom-buttons">
             <Button
               // style={{ backgroundColor: "rgb(127, 25, 127)" }}
               icon={<ArrowDownOutlined />}
               iconPosition={"start"}
               type="primary"
+              onClick={handleDeposit}
             >
               Deposit
             </Button>
@@ -173,9 +190,9 @@ const Match = () => {
     getQ();
   }, []);
 
-  const [inputValue, setInputValue] = useState("1");
+  const [inputTokens, setInputTokens] = useState("1");
   const onChange = (newValue) => {
-    setInputValue(newValue);
+    setInputTokens(newValue);
   };
   const navigate = useNavigate();
 
@@ -183,28 +200,28 @@ const Match = () => {
     navigate("/endmatch");
   };
   return (
-    <div class="main-container">
-      <div class="info-container">
-        <div class="info-item">
+    <div className="main-container">
+      <div className="info-container">
+        <div className="info-item">
           <Typography level={5}>
             Opponent:{" "}
-            <span style={{ color: "#a312aa", margin: "0 0 0 10px" }}>
+            <span style={{ color: "#a312aa", margin: "10px" }}>
               {gameData.opponent}
             </span>
           </Typography>
         </div>
-        <div class="info-item">
+        <div className="info-item">
           <Typography level={5}>Questions left: </Typography>
-          <span style={{ color: "#a312aa", margin: "0 0 0 10px" }}>
+          <span style={{ color: "#a312aa", margin: "10px" }}>
             {gameData.questions}
           </span>
         </div>
       </div>
-      <div class="question-container">
+      <div className="question-container">
         <Typography>{question.body}</Typography>
       </div>
-      <div class="options-container">
-        <div class="options-row">
+      <div className="options-container">
+        <div className="options-row">
           <Button
             style={{
               backgroundColor: "#a312aa",
@@ -234,7 +251,7 @@ const Match = () => {
             {question.opt2}
           </Button>
         </div>
-        <div class="options-row">
+        <div className="options-row">
           <Button
             style={{
               backgroundColor: "#a312aa",
@@ -291,9 +308,9 @@ const EndMatch = () => {
   const navigateToHome = () => {
     navigate("/");
   };
-  const [inputValue, setInputValue] = useState("1");
+  const [inputTokens, setInputTokens] = useState("1");
   const onChange = (newValue) => {
-    setInputValue(newValue);
+    setInputTokens(newValue);
   };
   const renderResult = (res) => {
     if (res === true) {
@@ -305,12 +322,12 @@ const EndMatch = () => {
     }
   };
   return (
-    <div className="main-container">
+    <div classNameName="main-container">
       <div style={{ margin: "15% 0 35% 0" }}>
         {" "}
         <Typography.Title level={4}>Results</Typography.Title>
-        <div className="table-container">
-          <table className="results-table">
+        <div classNameName="table-container">
+          <table classNameName="results-table">
             <thead>
               <tr>
                 <th></th>
