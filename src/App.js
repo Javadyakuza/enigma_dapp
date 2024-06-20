@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { Button, Typography } from "antd";
 import "antd/dist/reset.css";
+import { useNavigate } from "react-router-dom";
 import "./App.css"; // Make sure to import your CSS file
 import {
   SearchOutlined,
   ArrowDownOutlined,
   ArrowUpOutlined,
+  ArrowLeftOutlined,
+  CheckOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import { Col, InputNumber, Row, Slider, Space } from "antd";
 const { Title } = Typography;
@@ -40,9 +44,22 @@ const fetchGameData = async () => {
   });
   return response;
 };
+const fetchResults = async () => {
+  // Simulate a data fetch. Replace with actual data fetching logic.
+  const response = await new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        user_res: [true, false, true],
+        opponent_res: [false, false, true],
+        status: "congrats you won 🎉",
+      });
+    }, 1000);
+  });
+  return response;
+};
 const Home = () => {
   const [data, setData] = useState({ address: "", balance: "" });
-
+  const navigate = useNavigate();
   useEffect(() => {
     const getData = async () => {
       const fetchedData = await fetchData();
@@ -56,17 +73,22 @@ const Home = () => {
   const onChange = (newValue) => {
     setInputValue(newValue);
   };
-
+  const navigateToMatch = () => {
+    navigate("/match");
+  };
   return (
     <div class="main-container">
       <div class="main-inside-container">
         <div class="top-left">
-          <Title style={{ color: "rgb(127, 25, 127)" }} level={5}>
+          <Typography.Title style={{ color: "rgb(127, 25, 127)" }} level={5}>
             Address: <span style={{ color: "#d78c09" }}>{data.address}</span>
-          </Title>
-          <Title style={{ color: "rgb(127, 25, 127)" }} level={5}>
+          </Typography.Title>
+          <Typography.Title
+            style={{ color: "rgb(127, 25, 127)", textAlign: "left" }}
+            level={5}
+          >
             Balance: <span style={{ color: "#d78c09" }}>{data.balance}</span>
-          </Title>
+          </Typography.Title>
         </div>
         <div class="center">
           <Title level={2} style={{ color: "rgb(255, 0, 255)" }}>
@@ -80,6 +102,7 @@ const Home = () => {
             icon={<SearchOutlined />}
             iconPosition={"start"}
             type="primary"
+            onClick={navigateToMatch}
           >
             Find Match
           </Button>
@@ -154,11 +177,15 @@ const Match = () => {
   const onChange = (newValue) => {
     setInputValue(newValue);
   };
+  const navigate = useNavigate();
 
+  const navigateToEndMatch = () => {
+    navigate("/endmatch");
+  };
   return (
     <div class="main-container">
-      <div className="info-container">
-        <div className="info-item">
+      <div class="info-container">
+        <div class="info-item">
           <Typography level={5}>
             Opponent:{" "}
             <span style={{ color: "#a312aa", margin: "0 0 0 10px" }}>
@@ -166,7 +193,7 @@ const Match = () => {
             </span>
           </Typography>
         </div>
-        <div className="info-item">
+        <div class="info-item">
           <Typography level={5}>Questions left: </Typography>
           <span style={{ color: "#a312aa", margin: "0 0 0 10px" }}>
             {gameData.questions}
@@ -176,8 +203,8 @@ const Match = () => {
       <div class="question-container">
         <Typography>{question.body}</Typography>
       </div>
-      <div className="options-container">
-        <div className="options-row">
+      <div class="options-container">
+        <div class="options-row">
           <Button
             style={{
               backgroundColor: "#a312aa",
@@ -202,11 +229,12 @@ const Match = () => {
               justifyContent: "center",
             }}
             type="primary"
+            onClick={navigateToEndMatch}
           >
             {question.opt2}
           </Button>
         </div>
-        <div className="options-row">
+        <div class="options-row">
           <Button
             style={{
               backgroundColor: "#a312aa",
@@ -240,4 +268,88 @@ const Match = () => {
   );
 };
 
-export { Home, Match };
+const EndMatch = () => {
+  const [results, setResult] = useState({
+    user_res: [true, false, true],
+    opponent_res: [false, false, true],
+    status: "congrats, you won 🎉",
+  });
+  const [gameData, setGameData] = useState({
+    opponent: "some sort of address",
+    questions: "3",
+  });
+  useEffect(() => {
+    const getQ = async () => {
+      const fetchedData = await fetchResults();
+      setResult(fetchedData);
+    };
+
+    getQ();
+  }, []);
+  const navigate = useNavigate();
+
+  const navigateToHome = () => {
+    navigate("/");
+  };
+  const [inputValue, setInputValue] = useState("1");
+  const onChange = (newValue) => {
+    setInputValue(newValue);
+  };
+  const renderResult = (res) => {
+    if (res === true) {
+      return <CheckOutlined style={{ color: "green" }} />;
+    } else if (res === false) {
+      return <CloseOutlined style={{ color: "red" }} />;
+    } else {
+      return <span>N/A</span>;
+    }
+  };
+  return (
+    <div className="main-container">
+      <div style={{ margin: "15% 0 35% 0" }}>
+        {" "}
+        <Typography.Title level={4}>Results</Typography.Title>
+        <div className="table-container">
+          <table className="results-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>You</th>
+                <th>Opponent</th>
+              </tr>
+            </thead>
+            <tbody>
+              {results.user_res.map((res, index) => (
+                <tr key={index}>
+                  <td>Question {index + 1}</td>
+                  <td>{renderResult(res)}</td>
+                  <td>{renderResult(results.opponent_res[index])}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <Typography.Title level={5}>{results.status}</Typography.Title>
+      <Button
+        style={{
+          backgroundColor: "#a312aa",
+          height: "5%",
+          bottom: "5%",
+          left: "40%",
+          width: "20%",
+          textAlign: "center",
+          position: "absolute",
+        }}
+        type="primary"
+        icon={<ArrowLeftOutlined />}
+        iconPosition={"start"}
+        onClick={navigateToHome}
+      >
+        Home
+      </Button>
+    </div>
+  );
+};
+
+export { Home, Match, EndMatch };
