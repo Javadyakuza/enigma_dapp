@@ -21,12 +21,32 @@ const fetchData = async () => {
   return response;
 };
 
+const fetchQuestion = async () => {
+  // Simulate a data fetch. Replace with actual data fetching logic.
+  const response = await new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ body: "this is some serious question" });
+    }, 1000);
+  });
+  return response;
+};
+
+const fetchGameData = async () => {
+  // Simulate a data fetch. Replace with actual data fetching logic.
+  const response = await new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ opponent: "some serious address", questions: "3" });
+    }, 1000);
+  });
+  return response;
+};
 const Home = () => {
   const [data, setData] = useState({ address: "", balance: "" });
 
   useEffect(() => {
     const getData = async () => {
       const fetchedData = await fetchData();
+      fetchedData.address = <Button type="primary">Connect Wallet</Button>;
       setData(fetchedData);
     };
 
@@ -49,7 +69,7 @@ const Home = () => {
           </Title>
         </div>
         <div class="center">
-          <Title level={2} style={{ color: "rgb(127, 25, 127)" }}>
+          <Title level={2} style={{ color: "rgb(255, 0, 255)" }}>
             {" "}
             Enigma Duel
           </Title>
@@ -109,4 +129,115 @@ const Home = () => {
   );
 };
 
-export default Home;
+const Match = () => {
+  const [question, setQuestion] = useState({
+    body: "this is the first question",
+    opt1: "yes",
+    opt2: "no",
+    opt3: "yes-no",
+    opt4: "no-yes",
+  });
+  const [gameData, setGameData] = useState({
+    opponent: "some sort of address",
+    questions: "3",
+  });
+  useEffect(() => {
+    const getQ = async () => {
+      const fetchedData = await fetchGameData();
+      setGameData(fetchedData);
+    };
+
+    getQ();
+  }, []);
+
+  const [inputValue, setInputValue] = useState("1");
+  const onChange = (newValue) => {
+    setInputValue(newValue);
+  };
+
+  return (
+    <div class="main-container">
+      <div className="info-container">
+        <div className="info-item">
+          <Typography level={5}>
+            Opponent:{" "}
+            <span style={{ color: "#a312aa", margin: "0 0 0 10px" }}>
+              {gameData.opponent}
+            </span>
+          </Typography>
+        </div>
+        <div className="info-item">
+          <Typography level={5}>Questions left: </Typography>
+          <span style={{ color: "#a312aa", margin: "0 0 0 10px" }}>
+            {gameData.questions}
+          </span>
+        </div>
+      </div>
+      <div class="question-container">
+        <Typography>{question.body}</Typography>
+      </div>
+      <div className="options-container">
+        <div className="options-row">
+          <Button
+            style={{
+              backgroundColor: "#a312aa",
+              opacity: "70%",
+              height: "50%",
+              top: "25%",
+              width: "45%",
+              textAlign: "center",
+            }}
+            type="primary"
+          >
+            {question.opt1}
+          </Button>
+          <Button
+            style={{
+              backgroundColor: "#a312aa",
+              opacity: "70%",
+              height: "50%",
+              top: "25%",
+              width: "45%",
+              textAlign: "center",
+              justifyContent: "center",
+            }}
+            type="primary"
+          >
+            {question.opt2}
+          </Button>
+        </div>
+        <div className="options-row">
+          <Button
+            style={{
+              backgroundColor: "#a312aa",
+              opacity: "70%",
+              height: "50%",
+              top: "12.5%",
+              width: "45%",
+              textAlign: "center",
+            }}
+            size="large"
+            type="primary"
+          >
+            {question.opt3}
+          </Button>
+          <Button
+            style={{
+              backgroundColor: "#a312aa",
+              opacity: "70%",
+              height: "50%",
+              top: "12.5%",
+              width: "45%",
+              textAlign: "center",
+            }}
+            type="primary"
+          >
+            {question.opt4}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export { Home, Match };
