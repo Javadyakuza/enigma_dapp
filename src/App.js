@@ -84,7 +84,7 @@ const Home = () => {
           disabled={fetchedData.address == "" ? false : true}
           onClick={connect_wallet}
         >
-          {fetchedData.address}
+          <span style={{ color: "#d78c09" }}>{fetchedData.address}</span>
         </Button>
       );
       setWalletData(fetchedData);
@@ -102,7 +102,7 @@ const Home = () => {
       <div className="main-inside-container">
         <div className="top-left">
           <Typography.Title style={{ color: "rgb(127, 25, 127)" }} level={5}>
-            Address:{" "}
+            Address:
             <span style={{ color: "#d78c09" }}>{walletData.address}</span>
           </Typography.Title>
           <Typography.Title

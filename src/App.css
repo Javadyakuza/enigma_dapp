@@ -129,7 +129,9 @@ html, body {
   width :90%;
   gap: 10px;
 }
-
+.connect_wallet_text {
+  color: orange;
+}
 .bottom {
   position: absolute;
   bottom: 20px;
