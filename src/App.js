@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Typography } from "antd";
+import { Button, Typography, Spin } from "antd";
 import "antd/dist/reset.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./App.css"; // Make sure to import your CSS file
@@ -17,6 +17,8 @@ import {
   deposit,
   withdraw,
   fetch_question,
+  find_match,
+  finish_match,
   getFormattedString,
   sleep,
 } from "./helpers";
@@ -55,7 +57,7 @@ const Home = () => {
   const [walletData, setWalletData] = useState({ address: "", balance: "" });
   const [inputTokens, setInputTokens] = useState("1");
   const [findMatchDisability, setFindMatchDisability] = useState(true);
-
+  const [searchIcon, setSearchIcon] = useState(<SearchOutlined />);
   const onChange = (newValue) => {
     setFindMatchDisability(find_match_dis());
     setInputTokens(newValue);
@@ -75,6 +77,15 @@ const Home = () => {
   const find_match_dis = () => {
     return walletData.balance >= inputTokens ? false : true;
   };
+
+  const handle_find_match = async () => {
+    setSearchIcon(<Spin />);
+    let match_details = await find_match(inputTokens);
+    // in this stage the match has been found and the match-details is containing the questions and the contestant address
+    setSearchIcon(<SearchOutlined />);
+    navigate("/match", { state: { details: match_details } });
+  };
+
   useEffect(() => {
     const getData = async () => {
       const fetchedData = await fetchWalletData();
@@ -94,9 +105,7 @@ const Home = () => {
   }, []);
 
   const navigate = useNavigate();
-  const navigateToMatch = () => {
-    navigate("/match");
-  };
+
   return (
     <div className="main-container">
       <div className="main-inside-container">
@@ -122,10 +131,10 @@ const Home = () => {
         <div className="bottom">
           <Button
             style={{ backgroundColor: "rgb(200, 78, 158)" }}
-            icon={<SearchOutlined />}
+            icon={searchIcon}
             iconPosition={"start"}
             type="primary"
-            onClick={navigateToMatch}
+            onClick={handle_find_match}
             disabled={findMatchDisability}
           >
             Find Match
@@ -179,6 +188,8 @@ const Home = () => {
 };
 
 const Match = () => {
+  const location = useLocation();
+  const { details } = location.state || {};
   const [question, setQuestion] = useState({
     body: "",
     opt1: "",
@@ -191,14 +202,15 @@ const Match = () => {
   const fetchQuestion = async () => {
     if (gameData.questions == 0) {
       navigateToEndMatch();
+      return;
     }
-    setQuestion(await fetch_question());
+    let qs = JSON.parse(details.Ok.questions);
+    console.log("the selected question", qs, qs[result.length]);
+    setQuestion(qs[result.length]);
   };
 
   const [gameData, setGameData] = useState({
-    opponent: getFormattedString(
-      "archtestop18t6uyv8797813bujb645qef2f234f234jsnbfv"
-    ),
+    opponent: getFormattedString(details.Ok.contestant),
     questions: 3,
   });
 
@@ -210,9 +222,9 @@ const Match = () => {
   }, []);
   const navigate = useNavigate();
 
-  const navigateToEndMatch = () => {
-    let tmp = [false, true, true];
-    console.log("sending this one: ", [...result, ...[false, true, true]]);
+  const navigateToEndMatch = async () => {
+    let tmp = await finish_match(result);
+    console.log("sending this one: ", [...result, ...tmp]);
     navigate("/endmatch", { state: { result: [...result, ...tmp] } });
   };
   const handleNextQuestion1 = async () => {
@@ -453,12 +465,12 @@ const EndMatch = (state) => {
     }
   };
   return (
-    <div class="main-container">
+    <div className="main-container">
       <div style={{ margin: "15% 0 35% 0" }}>
         {" "}
         <Typography.Title level={4}>Results</Typography.Title>
-        <div class="table-container">
-          <table class="results-table">
+        <div className="table-container">
+          <table className="results-table">
             <thead>
               <tr>
                 <th></th>

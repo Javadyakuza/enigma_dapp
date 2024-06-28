@@ -4,6 +4,8 @@ import { Buffer } from "buffer";
 import process from "process";
 import { addresses } from "./constants";
 import mockQuestions from "./mock_questions.json";
+import axios from "axios";
+import qs from "qs";
 global.Buffer = Buffer;
 global.process = process;
 const getFormattedString = (str) => `${str.slice(0, 10)}...${str.slice(-5)}`;
@@ -235,7 +237,89 @@ async function fetch_question() {
   return question;
 }
 
-function sleep(ms) {
+async function finish_match(result) {
+  const offlineSigner = await window.keplr.getOfflineSignerAuto(
+    "constantine-3"
+  );
+  let accounts = await offlineSigner.getAccounts();
+
+  const urlencoded = new URLSearchParams();
+  urlencoded.append("q1", String(result[0]));
+  urlencoded.append("q2", String(result[1]));
+  urlencoded.append("q3", String(result[2]));
+  urlencoded.append("contestant", `${accounts[0].address}`);
+  let endpoint = "http://82.115.21.157:8000/api/finish-match";
+  let data_fetched = false;
+  let data_to_return;
+  while (!data_fetched) {
+    try {
+      let res = await send_request(urlencoded, endpoint);
+      if (String(res).includes("Err")) {
+        await sleep(3000);
+      } else {
+        data_fetched = true;
+        let raw_res = JSON.parse(String(res));
+        data_to_return = raw_res.Ok.split("").map((char) => char === "1");
+      }
+    } catch (err) {
+      await sleep(3000);
+    }
+  }
+  return data_to_return;
+}
+
+async function find_match(amount) {
+  const offlineSigner = await window.keplr.getOfflineSignerAuto(
+    "constantine-3"
+  );
+  let accounts = await offlineSigner.getAccounts();
+  const urlencoded = new URLSearchParams();
+  urlencoded.append("user", `${accounts[0].address}`);
+  urlencoded.append("entry_amount", `${amount}`);
+
+  let endpoint = "http://82.115.21.157:8000/api/find-match";
+
+  let data_fetched = false;
+  let data_to_return;
+
+  while (!data_fetched) {
+    try {
+      let res = await send_request(urlencoded, endpoint);
+      if (String(res).includes("Err")) {
+        await sleep(3000);
+      } else {
+        data_fetched = true;
+        data_to_return = JSON.parse(String(res));
+      }
+    } catch (err) {
+      await sleep(3000);
+    }
+  }
+  return data_to_return;
+}
+
+async function send_request(urlEncoded, url) {
+  const myHeaders = new Headers();
+  myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
+
+  const requestOptions = {
+    method: "POST",
+    headers: myHeaders,
+    body: urlEncoded,
+    redirect: "follow",
+  };
+
+  try {
+    let response = await fetch(url, requestOptions);
+    let result = await response.text();
+    console.log(result);
+    return result;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 export {
@@ -245,4 +329,6 @@ export {
   fetch_question,
   getFormattedString,
   sleep,
+  find_match,
+  finish_match,
 };
